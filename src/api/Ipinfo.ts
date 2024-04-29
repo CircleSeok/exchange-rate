@@ -5,7 +5,7 @@ export interface IpInfoData {
   country: string;
 }
 
-const APIKEY = process.env.NEXT_PUBLIC_IPINFO;
+const APIKEY = process.env.REACT_APP_IPINFO;
 export const fetchIpinfo = async (): Promise<IpInfoData> => {
   try {
     const ipInfoResponse = await axios.get(

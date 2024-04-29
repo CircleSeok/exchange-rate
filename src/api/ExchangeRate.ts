@@ -6,7 +6,7 @@ export interface ExchangeRateResponse {
 }
 
 export async function fetchExchangeRates(): Promise<ExchangeRateResponse> {
-  const APIKEY = process.env.NEXT_PUBLIC_EXCHANGERATE;
+  const APIKEY = process.env.REACT_APP_EXCHANGERATE;
   const url = `https://openexchangerates.org/api/latest.json?app_id=${APIKEY}`;
 
   try {
