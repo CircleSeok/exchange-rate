@@ -1,3 +1,4 @@
+import { useQuery } from 'react-query';
 import axios from 'axios';
 
 export interface ExchangeRateResponse {
@@ -5,7 +6,7 @@ export interface ExchangeRateResponse {
   base: string;
 }
 
-export async function fetchExchangeRates(): Promise<ExchangeRateResponse> {
+export const fetchExchangeRates = async (): Promise<ExchangeRateResponse> => {
   const APIKEY = process.env.REACT_APP_EXCHANGERATE;
   const url = `https://openexchangerates.org/api/latest.json?app_id=${APIKEY}`;
 
@@ -16,4 +17,8 @@ export async function fetchExchangeRates(): Promise<ExchangeRateResponse> {
     console.error('환율 데이터를 가져오는 중 오류가 발생했습니다.', error);
     throw error;
   }
-}
+};
+
+export const useExchangeRates = () => {
+  return useQuery<ExchangeRateResponse>('exchangeRates', fetchExchangeRates);
+};
