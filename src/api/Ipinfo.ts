@@ -6,7 +6,7 @@ export interface IpInfoData {
   country: string;
 }
 
-interface CountryInfo {
+export interface CountryInfo {
   cca2: string;
   currencies: { code: string }[];
 }
@@ -43,7 +43,7 @@ export const getCurrencyCode = async (countryCode: string): Promise<string> => {
 };
 
 export const useUserCountry = () => {
-  return useQuery('userCountry', fetchUserCountry);
+  return useQuery<IpInfoData>('userCountry', fetchUserCountry);
 };
 
 export const useCurrencyCode = (countryCode: string) => {
