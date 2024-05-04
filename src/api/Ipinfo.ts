@@ -18,7 +18,7 @@ export const fetchUserCountry = async () => {
       `https://ipinfo.io/json?token=${APIKEY}`
     );
     console.log(ipInfoResponse.data);
-    return ipInfoResponse.data.country;
+    return ipInfoResponse.data;
   } catch (error) {
     throw new Error('사용자 국가 불러오기 실패');
   }

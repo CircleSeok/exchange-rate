@@ -24,24 +24,24 @@ export const useExchangeRates = () => {
 };
 // import axios from 'axios';
 
-// interface ExchangeRateData {
-//   rates: Record<string, number>;
-// }
+export interface ExchangeRateData {
+  rates: Record<string, number>;
+}
 
-// const getResultRatesByBaseCode = async (
-//   baseCode: string,
-//   resultCode: string
-// ): Promise<number> => {
-//   try {
-//     const response = await axios.get<ExchangeRateData>(
-//       `https://api.exchangerate-api.com/v4/latest/${baseCode}`
-//     );
-//     const data = response.data;
-//     return data.rates[resultCode] || 0;
-//   } catch (error) {
-//     throw new Error('Unable to get the rate');
-//   }
-// };
+export const getResultRatesByBaseCode = async (
+  baseCode: string,
+  resultCode: string
+): Promise<number> => {
+  try {
+    const response = await axios.get<ExchangeRateData>(
+      `https://api.exchangerate-api.com/v4/latest/${baseCode}`
+    );
+    const data = response.data;
+    return data.rates[resultCode] || 0;
+  } catch (error) {
+    throw new Error('Unable to get the rate');
+  }
+};
 
 // // Calculating currencies
 // const calculate = async () => {

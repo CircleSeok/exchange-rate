@@ -1,16 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useQuery } from 'react-query';
-import { CountryInfo } from '../api/Ipinfo';
-
-interface ExchangeRateData {
-  rates: Record<string, number>;
-}
-
-export interface IpInfoData {
-  ip: string;
-  country: string;
-}
+import {
+  CountryInfo,
+  IpInfoData,
+  fetchUserCountry,
+  getCurrencyCode,
+} from '../api/Ipinfo';
+import { getResultRatesByBaseCode } from '../api/ExchangeRate';
 
 const APIKEY = process.env.REACT_APP_IPINFO;
 
@@ -24,32 +21,14 @@ const useCurrencyCode = (countryCode: string) => {
   );
 };
 
-export const fetchUserCountry = async () => {
-  try {
-    const ipInfoResponse = await axios.get(
-      `https://ipinfo.io/json?token=${APIKEY}`
-    );
-    return ipInfoResponse.data;
-  } catch (error) {
-    throw new Error('사용자 국가 불러오기 실패');
-  }
-};
+const useInputRef = () => {
+  const CurrencyCodeOne = useRef<HTMLSelectElement>(null);
+  const CurrencyCodeTwo = useRef<HTMLSelectElement>(null);
+  const ConvertOne = useRef<HTMLInputElement>(null);
+  const ConvertTwo = useRef<HTMLInputElement>(null);
+  const rateEl = useRef<HTMLParagraphElement>(null);
 
-export const getCurrencyCode = async (countryCode: string): Promise<string> => {
-  try {
-    const response = await axios.get<CountryInfo[]>(
-      'https://restcountries.com/v3.1/all'
-    );
-    const data = response.data;
-    const country = data.find((country) => country.cca2 === countryCode);
-    if (!country) {
-      throw new Error('국가를 찾을 수 없음');
-    }
-    const currencyCode = Object.keys(country.currencies)[0];
-    return currencyCode;
-  } catch (error) {
-    throw new Error('통화 코드 가져오기 실패');
-  }
+  return { CurrencyCodeOne, CurrencyCodeTwo, ConvertOne, ConvertTwo, rateEl };
 };
 
 const options = [
@@ -66,11 +45,8 @@ const options = [
 ];
 
 const ExchangeRateCalculator: React.FC = () => {
-  const CurrencyCodeOne = useRef<HTMLSelectElement>(null);
-  const CurrencyCodeTwo = useRef<HTMLSelectElement>(null);
-  const ConvertOne = useRef<HTMLInputElement>(null);
-  const ConvertTwo = useRef<HTMLInputElement>(null);
-  const rateEl = useRef<HTMLParagraphElement>(null);
+  const { CurrencyCodeOne, CurrencyCodeTwo, ConvertOne, ConvertTwo, rateEl } =
+    useInputRef();
 
   const userCountryQuery = useUserCountry();
   const currencyCodeQuery = useCurrencyCode(
@@ -83,38 +59,23 @@ const ExchangeRateCalculator: React.FC = () => {
     }
   }, [currencyCodeQuery.data]);
 
-  const getResultRatesByBaseCode = async (
-    baseCode: string,
-    resultCode: string
-  ): Promise<number> => {
-    try {
-      const response = await axios.get<ExchangeRateData>(
-        `https://api.exchangerate-api.com/v4/latest/${baseCode}`
-      );
-      const data = response.data;
-      return data.rates[resultCode] || 0;
-    } catch (error) {
-      throw new Error('에러 발생');
-    }
-  };
-
   const calculate = async () => {
-    const currency_one: string = CurrencyCodeOne.current?.value || '';
-    const currency_two: string = CurrencyCodeTwo.current?.value || '';
+    const currency_code_one: string = CurrencyCodeOne.current?.value || '';
+    const currency_code_two: string = CurrencyCodeTwo.current?.value || '';
 
     try {
       const data: number = await getResultRatesByBaseCode(
-        currency_one,
-        currency_two
+        currency_code_one,
+        currency_code_two
       );
       const amount_one: number = parseFloat(ConvertOne.current?.value || '0');
       const convertedAmount: number = data * amount_one || 0;
 
       if (ConvertTwo.current && rateEl.current) {
-        ConvertTwo.current.value = convertedAmount.toFixed(4).toString();
-        rateEl.current.innerText = `${amount_one} ${currency_one} = ${convertedAmount.toFixed(
-          4
-        )} ${currency_two}`;
+        ConvertTwo.current.value = convertedAmount.toFixed(2);
+        rateEl.current.innerText = `${amount_one} ${currency_code_one} = ${convertedAmount.toFixed(
+          2
+        )} ${currency_code_two}`;
       }
     } catch (error) {
       throw new Error('에러 발생');
