@@ -1,15 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
-import {
-  CountryInfo,
-  IpInfoData,
-  fetchUserCountry,
-  getCurrencyCode,
-} from '../api/Ipinfo';
+import { IpInfoData, fetchUserCountry, getCurrencyCode } from '../api/Ipinfo';
 import { getResultRatesByBaseCode } from '../api/ExchangeRate';
-
-const APIKEY = process.env.REACT_APP_IPINFO;
 
 const useUserCountry = () => {
   return useQuery<IpInfoData>('userCountry', fetchUserCountry);
@@ -47,6 +39,7 @@ const options = [
 const ExchangeRateCalculator: React.FC = () => {
   const { CurrencyCodeOne, CurrencyCodeTwo, ConvertOne, ConvertTwo, rateEl } =
     useInputRef();
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
 
   const userCountryQuery = useUserCountry();
   const currencyCodeQuery = useCurrencyCode(
@@ -59,7 +52,7 @@ const ExchangeRateCalculator: React.FC = () => {
     }
   }, [currencyCodeQuery.data]);
 
-  const calculate = async () => {
+  const calculateAndUpdate = async () => {
     const currency_code_one: string = CurrencyCodeOne.current?.value || '';
     const currency_code_two: string = CurrencyCodeTwo.current?.value || '';
 
@@ -76,6 +69,35 @@ const ExchangeRateCalculator: React.FC = () => {
         rateEl.current.innerText = `${amount_one} ${currency_code_one} = ${convertedAmount.toFixed(
           2
         )} ${currency_code_two}`;
+        setConvertedAmount(convertedAmount);
+      }
+    } catch (error) {
+      throw new Error('에러 발생');
+    }
+  };
+
+  useEffect(() => {
+    calculateAndUpdate();
+  }, [ConvertOne.current?.value, CurrencyCodeTwo.current?.value]);
+
+  const handleConvertTwoChange = async () => {
+    const currency_code_one: string = CurrencyCodeOne.current?.value || '';
+    const currency_code_two: string = CurrencyCodeTwo.current?.value || '';
+
+    try {
+      const data: number = await getResultRatesByBaseCode(
+        currency_code_two,
+        currency_code_one
+      );
+      const amount_two: number = parseFloat(ConvertTwo.current?.value || '0');
+      const convertedAmount: number = amount_two / data || 0;
+
+      if (ConvertOne.current && rateEl.current) {
+        ConvertOne.current.value = convertedAmount.toFixed(2);
+        rateEl.current.innerText = `${amount_two} ${currency_code_two} = ${convertedAmount.toFixed(
+          2
+        )} ${currency_code_one}`;
+        setConvertedAmount(convertedAmount);
       }
     } catch (error) {
       throw new Error('에러 발생');
@@ -93,11 +115,15 @@ const ExchangeRateCalculator: React.FC = () => {
             </option>
           ))}
         </select>
-        <input type='number' ref={ConvertOne} />
+        <input type='number' ref={ConvertOne} onChange={calculateAndUpdate} />
       </div>
       <div>
         <label htmlFor='CurrencyCodeTwo'>Currency 2:</label>
-        <select id='CurrencyCodeTwo' ref={CurrencyCodeTwo}>
+        <select
+          id='CurrencyCodeTwo'
+          ref={CurrencyCodeTwo}
+          onChange={handleConvertTwoChange}
+        >
           {options.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -106,7 +132,6 @@ const ExchangeRateCalculator: React.FC = () => {
         </select>
         <input type='number' ref={ConvertTwo} readOnly />
       </div>
-      <button onClick={calculate}>Calculate</button>
       <p ref={rateEl}></p>
     </div>
   );
