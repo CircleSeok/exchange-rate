@@ -40,6 +40,7 @@ const ExchangeRateCalculator: React.FC = () => {
   const { CurrencyCodeOne, CurrencyCodeTwo, ConvertOne, ConvertTwo, rateEl } =
     useInputRef();
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
+  const [swapped, setSwapped] = useState<boolean>(false);
 
   const userCountryQuery = useUserCountry();
   const currencyCodeQuery = useCurrencyCode(
@@ -78,7 +79,7 @@ const ExchangeRateCalculator: React.FC = () => {
 
   useEffect(() => {
     calculateAndUpdate();
-  }, [ConvertOne.current?.value, CurrencyCodeTwo.current?.value]);
+  }, [ConvertOne.current?.value, CurrencyCodeTwo.current?.value, swapped]);
 
   const handleConvertTwoChange = async () => {
     const currency_code_one: string = CurrencyCodeOne.current?.value || '';
@@ -102,6 +103,13 @@ const ExchangeRateCalculator: React.FC = () => {
     } catch (error) {
       throw new Error('에러 발생');
     }
+  };
+
+  const handleSwap = () => {
+    const tempValue = CurrencyCodeOne.current?.value;
+    CurrencyCodeOne.current!.value = CurrencyCodeTwo.current?.value || '';
+    CurrencyCodeTwo.current!.value = tempValue || '';
+    setSwapped(!swapped);
   };
 
   return (
@@ -132,6 +140,7 @@ const ExchangeRateCalculator: React.FC = () => {
         </select>
         <input type='number' ref={ConvertTwo} readOnly />
       </div>
+      <button onClick={handleSwap}>Swap</button>
       <p ref={rateEl}></p>
     </div>
   );
