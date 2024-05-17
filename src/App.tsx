@@ -1,10 +1,10 @@
 import './App.css';
-import CountryWithCurrencyCode from './components/CountryWithCurrencyCode';
+import ExchangeRateCalculator from './components/ExchangeRateCalculator';
 
 function App() {
   return (
     <>
-      <CountryWithCurrencyCode />
+      <ExchangeRateCalculator />
     </>
   );
 }
