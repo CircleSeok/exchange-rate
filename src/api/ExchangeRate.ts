@@ -22,7 +22,6 @@ export const fetchExchangeRates = async (): Promise<ExchangeRateResponse> => {
 export const useExchangeRates = () => {
   return useQuery<ExchangeRateResponse>('exchangeRates', fetchExchangeRates);
 };
-// import axios from 'axios';
 
 export interface ExchangeRateData {
   rates: Record<string, number>;

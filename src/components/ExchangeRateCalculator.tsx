@@ -5,34 +5,28 @@ import {
   fetchCurrencyCodes,
   getCurrencyCode,
 } from '../api/Ipinfo';
-import { useExchangeRates } from '../api/ExchangeRate';
+import { fetchExchangeRates, useExchangeRates } from '../api/ExchangeRate';
+import './styles.css';
 
 export default function ExchangeRateCalculator() {
+  const [isPaused, setIsPaused] = useState(false);
   const {
     data: userCountryData,
     isLoading: isUserCountryLoading,
     error: userCountryError,
-  } = useQuery('userCountry', fetchUserCountry);
+  } = useQuery('userCountry', fetchUserCountry, { enabled: !isPaused });
 
   const {
     data: exchangeRatesData,
     isLoading: isExchangeRatesLoading,
     error: exchangeRatesError,
-  } = useExchangeRates();
+  } = useQuery('exchangeRates', fetchExchangeRates, { enabled: !isPaused });
 
   const {
     data: currencyCodes,
     isLoading: isCurrencyCodesLoading,
     error: currencyCodesError,
-  } = useQuery('currencyCodes', fetchCurrencyCodes);
-
-  function renderOptions() {
-    return options.map((option) => (
-      <option key={option} value={option}>
-        {option}
-      </option>
-    ));
-  }
+  } = useQuery('currencyCodes', fetchCurrencyCodes, { enabled: !isPaused });
 
   const [options, setOptions] = useState<string[]>([]);
   const [amountValue, setAmountValue] = useState('');
@@ -48,12 +42,10 @@ export default function ExchangeRateCalculator() {
 
   useEffect(() => {
     if (currencyCodes) {
-      console.log('통화 코드 목록:', currencyCodes);
       setOptions(currencyCodes);
     }
 
     if (userCurrencyCode) {
-      console.log('사용자 통화 코드:', userCurrencyCode);
       setAmountCurrency(userCurrencyCode);
     }
   }, [currencyCodes, userCurrencyCode]);
@@ -86,41 +78,69 @@ export default function ExchangeRateCalculator() {
     isCurrencyCodesLoading ||
     isUserCurrencyLoading
   ) {
-    return <div>로딩 중...</div>;
+    return <div className='loading'>로딩 중...</div>;
   }
 
   if (userCountryError || exchangeRatesError || currencyCodesError) {
-    return <div>에러 발생</div>;
+    return <div className='error'>에러 발생</div>;
   }
 
   return (
-    <div>
-      <label>금액</label>
-      <select
-        value={amountCurrency}
-        onChange={(e) => setAmountCurrency(e.target.value)}
-      >
-        {renderOptions()}
-      </select>
-      <input
-        value={amountValue}
-        onChange={(e) => setAmountValue(e.target.value)}
-        type='number'
-      />
-      <label>환전</label>
-      <select
-        value={exchangeCurrency}
-        onChange={(e) => setExchangeCurrency(e.target.value)}
-      >
-        {renderOptions()}
-      </select>
-      <input
-        value={exchangeValue}
-        onChange={(e) => setExchangeValue(e.target.value)}
-        type='number'
-        readOnly
-      />
-      <button onClick={swapCurrencies}>swap</button>
+    <div className='container'>
+      <div className='wrapper'>
+        <h1>Exchange Rate Calculator</h1>
+        <div className='input-wrap'>
+          <div className='input-row'>
+            <label className='label'>금액</label>
+            <div className='input-group'>
+              <select
+                className='select'
+                value={amountCurrency}
+                onChange={(e) => setAmountCurrency(e.target.value)}
+              >
+                {options.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <input
+                className='input'
+                value={amountValue}
+                onChange={(e) => setAmountValue(e.target.value)}
+                type='number'
+              />
+            </div>
+          </div>
+
+          <div className='input-row'>
+            <label className='label'>환전</label>
+            <div className='input-group'>
+              <select
+                className='select'
+                value={exchangeCurrency}
+                onChange={(e) => setExchangeCurrency(e.target.value)}
+              >
+                {options.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <input
+                className='input'
+                value={exchangeValue}
+                onChange={(e) => setExchangeValue(e.target.value)}
+                type='number'
+              />
+            </div>
+          </div>
+        </div>
+
+        <button className='button' onClick={swapCurrencies}>
+          swap
+        </button>
+      </div>
     </div>
   );
 }
